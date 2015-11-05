@@ -44,6 +44,8 @@ Temporary Items
 
 # Matlab gitignores
 *.mat
+*.m~
+*.asv
 
 # Don't upload the images (copyright issues, images available on request)
 *.jpg
