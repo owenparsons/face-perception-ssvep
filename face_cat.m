@@ -65,7 +65,6 @@ n_faces = size(dir(fullfile(folder_faces, '*.jpg')), 1);
 filenames_all(1:n_objects) = filenames_objects;
 filenames_all(n_objects+1:n_objects+n_faces) = filenames_faces;
 
-
 %% Set up Keyboard, Screen, Sound
 
 % Variables related to Display
@@ -87,8 +86,10 @@ KbQueueCreate([], keyList); clear keyList
 ListenChar(2);
 
 % I/O driver
-% config_io
+config_io;
 address = hex2dec('D010');
+% Send Test Trigger
+outp(address, 0);
 
 % Sound
 InitializePsychSound;
