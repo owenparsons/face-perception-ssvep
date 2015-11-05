@@ -8,7 +8,7 @@ try
 scr_background = 127.5;
 
 % Open Full-Screen Window
-Screen('Preference', 'SkipSyncTests', 1); % JUST FOR TESTING
+% Screen('Preference', 'SkipSyncTests', 1); % JUST FOR TESTING
 
 scr_no = 0;
 scr = Screen('OpenWindow', scr_no, scr_background);
@@ -31,10 +31,10 @@ t_frames = round(f_screen / f_pictures);
 f_face = f_pictures/5; % this NEEDS to be an integer division of f_pictures
 
 % Trial Duration
-trialdur = 6;
+trialdur = 20;
 
 % Break Duration
-breakdur = 4;
+breakdur = 5;
 
 % Contrasts
 % contrasts = [0 0.08, 0.16, 0.32, 0.64];
@@ -205,7 +205,7 @@ KbQueueStop;
 
 
 %% Go through Trials
-for iTrial = 1:3
+for iTrial = 1:12
     
     % Display Configuring Screen
     DrawFormattedText(scr, 'Configuring...', 'center', 'center', 0);
