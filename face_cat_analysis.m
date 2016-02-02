@@ -1,4 +1,4 @@
-clearvars;
+% clearvars;
  %#ok<*SAGROW>
 
  electrodes = [20:31, 57:62, 64];
@@ -20,7 +20,10 @@ cfg_preproc = cfg_deftrials;
 cfg_preproc.dataset = 'E:\Documents\Recorded Data\Piloting Data\faces1.bdf';
 cfg_preproc.continuous = 'yes';
 cfg_preproc.demean    = 'yes';
-cfg_preproc.detrend = 'no';
+cfg_preproc.detrend = 'yes';
+% Bandpass Filter
+cfg_preproc.bpfilter = 'yes';
+cfg_preproc.bpfreq = [0.1 100];
 %     cfg_preproc.reref = 'yes';
 %     cfg_preproc.refchannel = 1:64;
 %     cfg_preproc.channel = 1:64;
