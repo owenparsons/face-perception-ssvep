@@ -47,7 +47,7 @@ stimsize = 200; % this is in pixels (actual image size)
 cycperdeg = 2;
 
 % Repitions per Condition
-nrep = 6;
+nrep = 8;
 
 % Background Luminance
 scr_background = 127.5;
@@ -142,7 +142,7 @@ flicker_wave = (cos(linspace(pi, 3*pi, t_frames)) + 1)/2;
 instrucs = ['In the following few trials, we just want to measure your brain response to\n\n',...
             'natural images. We are going to present these images in quick succession for\n\n'...
             '60s. During this time, please keep your eyes fixated on the images, and stay\n\n'...
-            'alert. There will be X trials, and in between trials you will have some time\n\n'...
+            'alert. There will be ', num2str(nrep),' trials, and in between trials you will have some time\n\n'...
             'to rest your eyes. Press the Space Bar when you are ready to begin.'];
 DrawFormattedText(scr, instrucs, 'center', 'center', 0);
 Screen('Flip', scr);
@@ -206,7 +206,7 @@ KbQueueStop;
 
 
 %% Go through Trials
-for iTrial = 1:12
+for iTrial = 1:nrep
     
     % Display Configuring Screen
     DrawFormattedText(scr, 'Configuring...', 'center', 'center', 0);
