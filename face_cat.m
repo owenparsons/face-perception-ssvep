@@ -1,6 +1,11 @@
 clearvars
-savefile = fullfile(pwd, 'Results', 'test_data.mat');
+
+tstamp = clock;
+tstamp = ['-', num2str(tstamp(3)), '-', num2str(tstamp(4)), '-'];
+savefile = fullfile(pwd, 'Results', [date, tstamp, 'data.mat']);
+
 scripts = savescripts;
+
 try
 %% Setup
 
@@ -8,7 +13,7 @@ try
 scr_background = 127.5;
 
 % Open Full-Screen Window
-Screen('Preference', 'SkipSyncTests', 1); % JUST FOR TESTING
+% Screen('Preference', 'SkipSyncTests', 1); % JUST FOR TESTING
 
 scr_no = 0;
 scr = Screen('OpenWindow', scr_no, scr_background);
@@ -31,10 +36,15 @@ t_frames = round(f_screen / f_pictures);
 f_face = f_pictures/5; % this NEEDS to be an integer division of f_pictures
 
 % Trial Duration
-trialdur = 6;
+trialdur = 14;
+
+% On-ramp
+% duration during which the contrast of the images is slowly ramped up and
+% down
+rampdur = 1;
 
 % Break Duration
-breakdur = 4;
+breakdur = 5;
 
 % Contrasts
 % contrasts = [0 0.08, 0.16, 0.32, 0.64];
@@ -47,7 +57,12 @@ stimsize = 200; % this is in pixels (actual image size)
 cycperdeg = 2;
 
 % Repitions per Condition
-nrep = 6;
+nrep = 16;
+
+% Trial type order
+% 1 means periodic face frequency, 2 means non-periodic
+trialtype = [ones(1, nrep/2), 1 + ones(1, nrep/2)];
+trialtype = trialtype(randperm(nrep));
 
 % Background Luminance
 scr_background = 127.5;
@@ -64,7 +79,6 @@ n_faces = size(dir(fullfile(folder_faces, '*.jpg')), 1);
 
 filenames_all(1:n_objects) = filenames_objects;
 filenames_all(n_objects+1:n_objects+n_faces) = filenames_faces;
-
 
 %% Set up Keyboard, Screen, Sound
 
@@ -87,8 +101,10 @@ KbQueueCreate([], keyList); clear keyList
 ListenChar(2);
 
 % I/O driver
-% config_io
+config_io;
 address = hex2dec('D010');
+% Send Test Trigger
+outp(address, 0);
 
 % Sound
 InitializePsychSound;
@@ -132,16 +148,11 @@ stimRect = [xcen-offset-pxsize/2, ycen-pxsize/2, xcen-offset+pxsize/2, ycen+pxsi
 flicker_wave = (cos(linspace(pi, 3*pi, t_frames)) + 1)/2;
 
 
-%% Trial Order
-% Code here any trial randomisation
-
-
-
 %% Instructions
 instrucs = ['In the following few trials, we just want to measure your brain response to\n\n',...
             'natural images. We are going to present these images in quick succession for\n\n'...
             '60s. During this time, please keep your eyes fixated on the images, and stay\n\n'...
-            'alert. There will be X trials, and in between trials you will have some time\n\n'...
+            'alert. There will be ', num2str(nrep), ' trials, and in between trials you will have some time\n\n'...
             'to rest your eyes. Press the Space Bar when you are ready to begin.'];
 DrawFormattedText(scr, instrucs, 'center', 'center', 0);
 Screen('Flip', scr);
@@ -205,31 +216,40 @@ KbQueueStop;
 
 
 %% Go through Trials
-for iTrial = 1:3
+for iTrial = 1:nrep
     
     % Display Configuring Screen
     DrawFormattedText(scr, 'Configuring...', 'center', 'center', 0);
     Screen('Flip', scr);
 
     % Load stimuli for this trial
-    n_trialstims = trialdur * f_pictures;
+    n_trialstims = (trialdur + 2*rampdur) * f_pictures;
+    
     list_trialstims = randperm(n_objects, n_trialstims);
+    
     for iStim = 1:numel(list_trialstims)
         temp_image = imread( fullfile(folder_objects, filenames_objects(list_trialstims(iStim)).name) );
         textures_trial{iStim} = Screen('MakeTexture', scr, temp_image);
     end
 
     % Replace every 5th with a face
-    n_trialfaces = floor(trialdur * f_face);
+    n_trialfaces = floor((trialdur + 2*rampdur) * f_face);
+    
     list_trialfaces = randperm(n_faces, n_trialfaces);
+    
     for iFace = 1:n_trialfaces
         Screen('Close', textures_trial{iFace * f_pictures/f_face});
         temp_image = imread( fullfile(folder_faces, filenames_faces(list_trialfaces(iFace)).name) );
         textures_trial{iFace * f_pictures/f_face} = Screen('MakeTexture', scr, temp_image);
     end
-
+    
+    % Scramble everything AGAIN in non-periodic trials
+    if trialtype(iTrial) == 2
+        textures_trial = textures_trial(randperm( numel(textures_trial) ));
+    end
+    
     % Pre-Trial
-    DrawFormattedText(scr, ['Practice Trial', '\nReady?'], 'center', ycen-pxsize/3, 0);
+    DrawFormattedText(scr, ['Trial ', num2str(iTrial), '/', num2str(nrep), '\nReady?'], 'center', ycen-pxsize/3, 0);
     Screen('DrawLines', scr, fixLines, fixWidth, fixColor, [xcen, ycen]);
     Screen('Flip', scr);
     KbStrokeWait;
@@ -237,17 +257,38 @@ for iTrial = 1:3
     Screen('Flip', scr);
     WaitSecs(2);
     
-    % Trial
+    % Set priority and send trigger signalling trial start
+    
     Priority(1);
-    outp(address, iTrial); % decide how to trigger trials
+    
+    outp(address, iTrial + 100*trialtype(iTrial)); % decide how to trigger trials
     WaitSecs(0.002);
     outp(address, 0);
-    trial_frames = ceil(trialdur * f_screen);
+
+    
+    % On-ramp
+    ramp_frames = ceil(rampdur * f_screen);
     t_last = GetSecs;
+    
+    for i = 1:ramp_frames;
+        Screen('DrawTexture', scr, textures_trial{ ceil(i/t_frames) }, [], [], [], [], (i/ramp_frames)*flicker_wave(mod(i-1, t_frames)+1));
+        t_last = Screen('Flip', scr, t_last+0.5*frame_dur); % specify deadline for timing issues?
+    end
+    
+    % Trial
+    trial_frames = ceil(trialdur * f_screen);
+    
     for i = 1:trial_frames;
         Screen('DrawTexture', scr, textures_trial{ ceil(i/t_frames) }, [], [], [], [], flicker_wave(mod(i-1, t_frames)+1));
         t_last = Screen('Flip', scr, t_last+0.5*frame_dur); % specify deadline for timing issues?
     end
+    
+    % Off-ramp
+    for i = 1:ramp_frames;
+        Screen('DrawTexture', scr, textures_trial{ ceil(i/t_frames) }, [], [], [], [], (1-(i/ramp_frames))*flicker_wave(mod(i-1, t_frames)+1));
+        t_last = Screen('Flip', scr, t_last+0.5*frame_dur); % specify deadline for timing issues?
+    end
+    
     Priority(0);
     Screen('Close');
     
