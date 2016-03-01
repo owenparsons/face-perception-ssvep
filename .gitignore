@@ -49,3 +49,6 @@ Temporary Items
 
 # Don't upload the images (copyright issues, images available on request)
 *.jpg
+
+# Ignore files with confidential info
+qualtrics_data.csv
