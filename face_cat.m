@@ -5,6 +5,8 @@ tstamp = ['-', num2str(tstamp(3)), '-', num2str(tstamp(4)), '-'];
 savefile = fullfile(pwd, 'Results', [date, tstamp, 'data.mat']);
 
 scripts = savescripts;
+% This is a function available on my github. It saves the content of all
+% scripts in the current directory for posterity
 
 try
 %% Setup
@@ -258,9 +260,7 @@ for iTrial = 1:nrep
     WaitSecs(2);
     
     % Set priority and send trigger signalling trial start
-    
     Priority(1);
-    
     outp(address, iTrial + 100*trialtype(iTrial)); % decide how to trigger trials
     WaitSecs(0.002);
     outp(address, 0);
