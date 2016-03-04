@@ -137,8 +137,8 @@ end
 
 %% Plot subject's data
 % plot(fft_data.freq, fft_data.powspctrm(ffa_eleci, :));
-plotting.topo_snr;
-drawnow;
+% plotting.topo_snr;
+% drawnow;
 
 
 
