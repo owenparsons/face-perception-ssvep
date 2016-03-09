@@ -1,0 +1,116 @@
+---
+title: "SSVEP_Faces"
+author: "Richard"
+date: "1 March 2016"
+output: word_document
+---
+
+```{r setup, echo=FALSE, warning=FALSE}
+setwd("~/Dropbox/PhD/Study_16_SSVEP/Data")
+library(ggplot2)
+library(knitr)
+library(gdata)
+library(Rmisc)
+require(reshape2)
+ssvep <- read.xls("TempData.xlsx")
+opts_chunk$set(echo = FALSE, cache=FALSE)
+read_chunk('~/Dropbox/PhD/Study_16_SSVEP/Scripts/remove_outliers.R')
+```
+
+Remove outliers
+```{r, echo=FALSE, warning=FALSE}
+<<remove-outliers>>
+#ssvep$outAQ <- remove_outliers(ssvep$AQ.sum)
+#ssvep$outSNR1 <- remove_outliers(ssvep$fnr_2.4)
+#ssvep$outSNR2 <- remove_outliers(ssvep$fnr_6.0)
+#ssvep$outFFA1 <- remove_outliers(ssvep$X6hz.amp)
+#ssvep$outFFA2 <- remove_outliers(ssvep$X2.4hz.amp)
+new_ssvep <- ssvep[complete.cases(ssvep),]
+```
+
+
+
+Plots
+```{r, echo=FALSE}
+myList1 <- list(ssvep$AQ.sum,new_ssvep$AQ.sum)
+df1 <- melt(myList1)
+df1$L1 <- as.factor(df1$L1)
+ggplot(data = df1, aes(x = L1, y = value)) +
+     geom_boxplot(aes(group = L1,fill=L1)) +
+     theme(legend.position="none") +
+     ylab("AQ")
+
+myList2 <- list(ssvep$X2.4hz.amp,new_ssvep$X2.4hz.amp)
+df2 <- melt(myList2)
+df2$L1 <- as.factor(df2$L1)
+ggplot(data = df2, aes(x = L1, y = value)) +
+     geom_boxplot(aes(group = L1,fill=L1)) +
+    theme(legend.position="none") +
+ylab("ffa amplitude 2.4Hz")
+
+myList3 <- list(ssvep$X6hz.amp,new_ssvep$X6hz.amp)
+df3 <- melt(myList3)
+df3$L1 <- as.factor(df3$L1)
+ggplot(data = df3, aes(x = L1, y = value)) +
+     geom_boxplot(aes(group = L1,fill=L1)) +
+    theme(legend.position="none") +
+ylab("ffa amplitude 6Hz")
+
+myList4 <- list(ssvep$X2.4hz.snr,new_ssvep$X2.4hz.snr)
+df4 <- melt(myList4)
+df4$L1 <- as.factor(df4$L1)
+ggplot(data = df4, aes(x = L1, y = value)) +
+     geom_boxplot(aes(group = L1,fill=L1)) +
+    theme(legend.position="none") +
+ylab("SNR at 2.4Hz")
+
+myList5 <- list(ssvep$X6hz.snr,new_ssvep$X6hz.snr)
+df5 <- melt(myList5)
+df5$L1 <- as.factor(df5$L1)
+ggplot(data = df5, aes(x = L1, y = value)) +
+     geom_boxplot(aes(group = L1,fill=L1)) +
+    theme(legend.position="none") +
+ylab("SNR at 6Hz")
+```
+
+
+Pearson Correlation & plot
+
+```{r, echo=FALSE, warning=FALSE, results="hide"}
+# get the correlation
+High <- cor.test(new_ssvep$AQ.sum, new_ssvep$X6hz.amp, method = "pearson")
+
+# plot the correlation
+ggplot(new_ssvep, aes(x=new_ssvep$X6hz.amp, y=new_ssvep$AQ.sum)) + geom_point(shape=1) + scale_colour_hue(l=50) + # Use brewermap
+  geom_smooth(method=lm,   # Add linear regression lines
+              se=TRUE,    # Don't add shaded confidence region
+              fullrange=TRUE) + ggtitle("SSVEP") + xlab("SSVEP Response 6Hz") + ylab("Autism Quotient")
+```
+
+The estimated correlation between AQ and SSVEP at 6Hz is `r cor(new_ssvep$AQ.sum, new_ssvep$X6hz.amp)` with an estimated p-value of `r High$p.value`.
+
+```{r, echo=FALSE, warning=FALSE, results="hide"}
+# get the correlation
+Low <- cor.test(new_ssvep$AQ.sum, new_ssvep$X2.4hz.amp, method = "pearson")
+
+# plot the correlation
+ggplot(new_ssvep, aes(x=new_ssvep$X2.4hz.amp, y=new_ssvep$AQ.sum)) + geom_point(shape=1) + scale_colour_hue(l=50) + # Use brewermap
+  geom_smooth(method=lm,   # Add linear regression lines
+              se=TRUE,    # Don't add shaded confidence region
+              fullrange=TRUE) + ggtitle("SSVEP") + xlab("SSVEP Response 2.4Hz") + ylab("Autism Quotient")
+```
+
+The estimated correlation between AQ and SSVEP at 2.4Hz is `r cor(new_ssvep$AQ.sum, new_ssvep$X2.4hz.amp)` with an estimated p-value of `r Low$p.value`.
+
+```{r, echo=FALSE, warning=FALSE, results="hide"}
+# get the correlation
+Ratio <- cor.test(new_ssvep$AQ.sum, new_ssvep$Ratio, method = "pearson")
+
+# plot the correlation
+ggplot(new_ssvep, aes(x=new_ssvep$Ratio, y=new_ssvep$AQ.sum)) + geom_point(shape=1) + scale_colour_hue(l=50) + # Use brewermap
+  geom_smooth(method=lm,   # Add linear regression lines
+              se=TRUE,    # Don't add shaded confidence region
+              fullrange=TRUE) + ggtitle("SSVEP") + xlab("SSVEP Response Ratio") + ylab("Autism Quotient")
+```
+
+The estimated correlation between AQ and SSVEP Ratio is `r cor(new_ssvep$AQ.sum, new_ssvep$Ratio)` with an estimated p-value of `r Ratio$p.value`.
