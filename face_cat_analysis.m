@@ -235,14 +235,15 @@ end
 
 end
 
-faceAmplitudeRight = ffa_harmonics{1, 1};
-baselineAmplitudeRight = ffa_harmonics{2, 1};
-faceAmplitudeLeft = ffa_harmonics{1, 2};
-baselineAmplitudeLeft = ffa_harmonics{2, 2};
-faceSNRRight = ffa_av_snr{1, 1};
-baselineSNRRight = ffa_av_snr{2, 1};
-faceSNRLeft = ffa_av_snr{1, 2};
-baselineSNRLeft = ffa_av_snr{2, 2};
+ids = ids'; aq = aq'; eq = eq'; sq = sq';
+faceAmplitudeRight = ffa_harmonics{1, 1}';
+baselineAmplitudeRight = ffa_harmonics{2, 1}';
+faceAmplitudeLeft = ffa_harmonics{1, 2}';
+baselineAmplitudeLeft = ffa_harmonics{2, 2}';
+faceSNRRight = ffa_av_snr{1, 1}';
+baselineSNRRight = ffa_av_snr{2, 1}';
+faceSNRLeft = ffa_av_snr{1, 2}';
+baselineSNRLeft = ffa_av_snr{2, 2}';
 % Create a table for all variables, then write to file
 all_data = table(ids, aq, eq, sq, faceAmplitudeRight, baselineAmplitudeRight, faceAmplitudeLeft, ...
                 baselineAmplitudeLeft, faceSNRRight, baselineSNRRight, faceSNRLeft, baselineSNRLeft);
