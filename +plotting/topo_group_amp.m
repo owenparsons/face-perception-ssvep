@@ -3,7 +3,7 @@ cfg_topoSNR.parameter = 'avg';
 cfg_topoSNR.layout = 'biosemi64.lay';
 % cfg_topoSNR.zlim = [0 25];
 cfg_topoSNR.commentpos = 'lefttop';
-cfg_topoSNR.colorbar = 'EastOutside';
+cfg_topoSNR.colorbar = 'SouthOutside';
 cfg_topoSNR.fontsize = 12;
 
 % cfg_topoSNR.highlight = 'label';
@@ -13,7 +13,7 @@ cfg_topoSNR.fontsize = 12;
 % cfg_topoSNR.highlightfontsize = 2;
 % cfg_topoSNR.highlightcolor = [0.1 0.7 0.1];
 
-trial_names = {'2.4 Hz', '6 Hz'};
+trial_names = {'1.2, 2.4, 3.6 Hz', '6 Hz'};
 % figure;
 
 % compute the group SNR
@@ -45,11 +45,11 @@ for stimulus = 1:2;
     ft_topoplotER(cfg_topoSNR, data_temp_topoAMP);
 
     hold on;
-
+    
 
 end
 
-% suptitle('Signal-To-Noise Ratio');
+suptitle('Amplitude');
 try
     load('colormap_topoplots.mat');
     colormap(cmap);

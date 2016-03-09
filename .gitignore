@@ -51,4 +51,4 @@ Temporary Items
 *.jpg
 
 # Ignore files with confidential info
-qualtrics_data.csv
+non-anonymised*

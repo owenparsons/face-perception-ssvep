@@ -21,21 +21,23 @@ file_dir = 'C:\EEG Data\Face Perception Data';
 file_names = dir([file_dir, '\*.bdf']);
 
 % Load qualtrics data
-qualtrics = load(fullfile(pwd, 'results', 'survey_data.mat'));
+qualtrics = load(fullfile(pwd, 'results', 'non-anonymised', 'survey_data.mat'));
 
 for iSubject = 1:numel(file_names);
 %% Set some baseline variables
 
 file = fullfile(file_dir, file_names(iSubject).name);
-ids{iSubject} = file_names(iSubject).name;
+ids{iSubject} = sprintf('subject%3d', iSubject); % This is for anonymisation
 clear cfg*
 
 if any(ismember(qualtrics.ids, file_names(iSubject).name))
 aq(iSubject) = qualtrics.aqs(ismember(qualtrics.ids, file_names(iSubject).name));
 eq(iSubject) = qualtrics.eqs(ismember(qualtrics.ids, file_names(iSubject).name));
+sq(iSubject) = qualtrics.sqs(ismember(qualtrics.ids, file_names(iSubject).name));
 else
     aq(iSubject) = NaN;
     eq(iSubject) = NaN;
+    sq(iSubject) = NaN;
 end
 
 %% Trial definition
@@ -165,8 +167,8 @@ end
 
 %% Calculate SNR and amplitude at electrodes of interest
 % Hemisphere 1 is right, 2 is left
-eoi{1} = {'P8', 'P10', 'PO8'};
-eoi{2} = {'P7', 'P9', 'PO7'};
+eoi{1} = {'P8', 'P10'};
+eoi{2} = {'P7', 'P9'};
 for hemisphere = 1:2
     electrode_index = ismember(fft_data.label, eoi{hemisphere});
     spectrum_freqs = fft_data.freq;
@@ -215,6 +217,7 @@ for stimulus = 1:2
             .* ffa_snr{iSubject, hemisphere}(stimulus_freqs==stimulus) ...
             ./ sum(ffa_snr{iSubject, hemisphere}(stimulus_freqs==stimulus)) ...
             ));
+        ffa_av_snr{stimulus, hemisphere}(iSubject) = mean(ffa_snr{iSubject, hemisphere}(stimulus_freqs==stimulus));
     end
     scalp_harmonics{iSubject, stimulus} = ...
         sqrt(...
@@ -232,26 +235,43 @@ end
 
 end
 
-
+faceAmplitudeRight = ffa_harmonics{1, 1};
+baselineAmplitudeRight = ffa_harmonics{2, 1};
+faceAmplitudeLeft = ffa_harmonics{1, 2};
+baselineAmplitudeLeft = ffa_harmonics{2, 2};
+faceSNRRight = ffa_av_snr{1, 1};
+baselineSNRRight = ffa_av_snr{2, 1};
+faceSNRLeft = ffa_av_snr{1, 2};
+baselineSNRLeft = ffa_av_snr{2, 2};
+% Create a table for all variables, then write to file
+all_data = table(ids, aq, eq, sq, faceAmplitudeRight, baselineAmplitudeRight, faceAmplitudeLeft, ...
+                baselineAmplitudeLeft, faceSNRRight, baselineSNRRight, faceSNRLeft, baselineSNRLeft);
+writetable(all_data, fullfile(pwd, 'results', 'current-results.csv')); % Need this for JASP
+writetable(all_data, fullfile(pwd, 'results', 'current-results.xlsx')); % For Excel-using peasants
 
 %% Calculate Summary Ratios
 % Ratio between the Face and Baseline Frequency
 face_vs_baseline = (ffa_harmonics{1, 1} - ffa_harmonics{2, 1}) ./ ...
                    (ffa_harmonics{1, 1} + ffa_harmonics{2, 1});
-               
+
 face_vs_baseline2 = ffa_harmonics{1, 1} ./ ffa_harmonics{2, 1};
 
 % Ratio between the Face, left and right side
 face_right_v_left = (ffa_harmonics{1, 1} - ffa_harmonics{1, 2}) ./ ...
                     (ffa_harmonics{1, 1} + ffa_harmonics{1, 2});
-                
+
 face_right_v_left2 = (ffa_harmonics{1, 1} ./ ffa_harmonics{1, 2});
 
+for iSubject = 1:numel(file_names);
+scalp_ratio{iSubject} = (all_snr{iSubject, 1} - all_snr{iSubject, 4}) ./...
+                (all_snr{iSubject, 1} + all_snr{iSubject, 4});
+end
 
 %% Plot group data
 % plot the average SNR
-figure;
+snr_fig = figure; snr_fig.Position = [500, 200, 800, 600];
 plotting.topo_group_snr;
+plot2svg(fullfile(pwd, 'results', 'current-results-snr.svg'), snr_fig);
 % plot the average amplitude
-figure;
-plotting.topo_group_amp;
+% figure;
+% plotting.topo_group_amp;
