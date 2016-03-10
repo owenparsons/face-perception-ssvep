@@ -46,8 +46,8 @@ cfg_deftrials.trialdef.eventtype = 'STATUS';
 cfg_deftrials.trialfun = 'ft_trialfun_general';
 
 % there is a 1s ramping up, then the trial is 14s, then a 1s ramping down
-cfg_deftrials.trialdef.prestim = -1.4; % this discards first second
-cfg_deftrials.trialdef.poststim = 13.2 - cfg_deftrials.trialdef.prestim;
+cfg_deftrials.trialdef.prestim = -1; % this discards first second
+cfg_deftrials.trialdef.poststim = 15 - cfg_deftrials.trialdef.prestim;
 
 % Trials are numbered 1-16, plus 100 for true and 200 for control
 cfg_deftrials.trialdef.eventvalue = 100 + (1:16);
@@ -73,7 +73,7 @@ cfg_preproc.demean    = 'yes'; % Subtract mean within each trial
 cfg_preproc.detrend = 'yes'; % equivalent to hi-pass filter
 % Bandpass Filter
 cfg_preproc.bpfilter = 'no';
-cfg_preproc.bpfreq = [0.5 15];
+cfg_preproc.bpfreq = [0.1 15];
 % Rereferencing
 cfg_preproc.reref = 'yes';
 cfg_preproc.refchannel = 1:64;
@@ -86,7 +86,7 @@ cfg_fft = [];
 cfg_fft.continuous = 'yes';
 cfg_fft.output = 'pow';
 cfg_fft.method = 'mtmfft';
-cfg_fft.foilim = [0.5 30];
+cfg_fft.foilim = [0 30];
 % Use the maximum frequency resolution
 cfg_fft.tapsmofrq = 1/(cfg_deftrials.trialdef.prestim + cfg_deftrials.trialdef.poststim);
 freq_res = 1/(cfg_deftrials.trialdef.prestim + cfg_deftrials.trialdef.poststim);
@@ -164,6 +164,26 @@ for i = 1:numel(analyse_freqs)
 end
 
 
+%% Calculate ALL possible SNRs for a histogram
+snr_histogram(iSubject).freq = fft_data.freq(:);
+snr_histogram(iSubject).snr = zeros(size(fft_data.powspctrm));
+surrounding_bins = 20;
+for frequency = fft_data.freq
+    
+    temp_noiseband = ~(fft_data.freq > stim_freq-2*cfg_fft.tapsmofrq &...
+                        fft_data.freq < stim_freq+2*cfg_fft.tapsmofrq) & ...
+                        (fft_data.freq > stim_freq-(2+surrounding_bins/2)*cfg_fft.tapsmofrq) &...
+                        (fft_data.freq < stim_freq+(2+surrounding_bins/2)*cfg_fft.tapsmofrq);
+    
+    snr_histogram(iSubject).snr(1:64, fft_data.freq==frequency) = ...
+        fft_data.powspctrm(1:64, fft_data.freq==frequency) ./ ...
+        mean(fft_data.powspctrm(1:64, temp_noiseband), 2);
+    
+end
+snr_histogram(iSubject).snr(:, 1:surrounding_bins/2) = NaN;
+snr_histogram(iSubject).snr(:, end-surrounding_bins/2:end) = NaN;
+
+
 
 %% Calculate SNR and amplitude at electrodes of interest
 % Hemisphere 1 is right, 2 is left
@@ -173,7 +193,8 @@ for hemisphere = 1:2
     electrode_index = ismember(fft_data.label, eoi{hemisphere});
     spectrum_freqs = fft_data.freq;
     spectrum{iSubject, hemisphere} = mean(fft_data.powspctrm(electrode_index, :), 1);
-    
+    ffa_snr_histogram{hemisphere}(iSubject, 1:numel(fft_data.freq)) =...
+        mean(snr_histogram(iSubject).snr(electrode_index, :), 1);
     for i = 1:numel(analyse_freqs)
         ffa_amp{iSubject, hemisphere}(i) = ...
             mean(mean(fft_data.powspctrm(electrode_index, stimband{i}), 2), 1);
@@ -181,6 +202,8 @@ for hemisphere = 1:2
         ffa_snr{iSubject, hemisphere}(i) = ...
             ffa_amp{iSubject, hemisphere}(i) ./...
             mean(mean(fft_data.powspctrm(electrode_index, noiseband{i}), 2), 1);
+        
+        
     end
 end
 disp(ffa_snr{iSubject, 1});
@@ -273,6 +296,15 @@ end
 snr_fig = figure; snr_fig.Position = [500, 200, 800, 600];
 plotting.topo_group_snr;
 plot2svg(fullfile(pwd, 'results', 'current-results-snr.svg'), snr_fig);
-% plot the average amplitude
-% figure;
-% plotting.topo_group_amp;
+
+snr_spec_fig = figure; snr_spec_fig.Position = [500, 200, 1000, 600];
+plotting.snr_spectrum;
+plot2svg(fullfile(pwd, 'results', 'current-results-snr-spectrum.svg'), snr_spec_fig);
+
+amp_spec_fig = figure; amp_spec_fig.Position = [500, 200, 1000, 600]; 
+plotting.amp_spectrum;
+amp_spec_fig.Units = 'pixels';
+plot2svg(fullfile(pwd, 'results', 'current-results-amp-spectrum.svg'), amp_spec_fig);
+
+% NOTE: plot2svg is broken at the moment, so you need to change lines 2421
+% and 2446 in plot2svg both to "if true" for it to work...
