@@ -8,7 +8,7 @@ for hemisphere = 1:2
     
     ylabel('Amplitude (\muV^2)', 'FontSize', 14);
     
-    subplot(1, 2, hemisphere);
+    currfig = subplot(1, 2, hemisphere);
     hold on;
     title(titles{hemisphere});
     xlim([1 13]);
@@ -28,9 +28,9 @@ for hemisphere = 1:2
     x_fill = [x(fill_index), fliplr(x(fill_index))];
     y_fill = [y(fill_index)-e(fill_index), fliplr(y(fill_index)+e(fill_index))];
     
-    fill( x_fill, y_fill, [83 148 255]/255, 'FaceAlpha', 0.2, 'EdgeColor', 'none' );
+    fill( x_fill, y_fill, [166 199 255]/255, 'EdgeColor', 'none' );
     
-    
+    plot(x, y, 'LineWidth', 1, 'Color', [83 148 255]/255);
 end
 
 suptitle('Amplitude Spectrum');

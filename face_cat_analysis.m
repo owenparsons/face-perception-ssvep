@@ -17,7 +17,7 @@ stimulus_freqs = [1, 1, 1, 2]; % Index 1=face 2=objects
 % inliers = true(numel(file_names), 1);
 
 % provide directory of the data files here
-file_dir = 'C:\EEG Data\Face Perception Data';
+file_dir = 'C:\Users\k1513504\Documents\face-cat-data';
 file_names = dir([file_dir, '\*.bdf']);
 
 % Load qualtrics data
@@ -59,6 +59,7 @@ try
 catch err
     % No trials in the file (too short?)
     utils.remove_subject;
+    continue;
 end
 
 
@@ -132,10 +133,13 @@ repair_electrodes = fft_data.label(bad_electrodes);
 
 if numel(repair_electrodes) > 3
     utils.remove_subject;
+    continue;
 elseif numel(repair_electrodes) > 0
     % If there are bad channels, use ft_channelrepair for interpolation
     cfg_neighbour.method = 'template';
+    cfg_neighbour.template = 'biosemi64_neighb.mat';
     cfg_neighbour.layout = 'biosemi64.lay';
+    
     cfg_neighbour.channel = repair_electrodes;
     cfg_repair.neighbours = ft_prepare_neighbours(cfg_neighbour);
     cfg_repair.elec = ft_read_sens('standard_1020.elc'); % this 3D layout ships with fieldtrip
@@ -202,8 +206,6 @@ for hemisphere = 1:2
         ffa_snr{iSubject, hemisphere}(i) = ...
             ffa_amp{iSubject, hemisphere}(i) ./...
             mean(mean(fft_data.powspctrm(electrode_index, noiseband{i}), 2), 1);
-        
-        
     end
 end
 disp(ffa_snr{iSubject, 1});
@@ -224,6 +226,7 @@ end
 % (Make everything NaNs)
 if max(occip_snr{iSubject}(stimulus_freqs==2)) < 2;
     utils.remove_subject;
+    continue;
 end
 
 
@@ -293,18 +296,26 @@ end
 
 %% Plot group data
 % plot the average SNR
-snr_fig = figure; snr_fig.Position = [500, 200, 800, 600];
+snr_fig = figure;
+snr_fig.Position = [500, 200, 800, 600];
 plotting.topo_group_snr;
-plot2svg(fullfile(pwd, 'results', 'current-results-snr.svg'), snr_fig);
+% plot2svg(fullfile(pwd, 'results', 'current-results-snr.svg'), snr_fig);
+export_fig(fullfile(pwd, 'results', 'current-results-snr.pdf'), '-pdf');
 
-snr_spec_fig = figure; snr_spec_fig.Position = [500, 200, 1000, 600];
+snr_spec_fig = figure;
+snr_spec_fig.Position = [500, 200, 1000, 600];
 plotting.snr_spectrum;
 plot2svg(fullfile(pwd, 'results', 'current-results-snr-spectrum.svg'), snr_spec_fig);
+% export_fig(fullfile(pwd, 'results', 'current-results-snr-spectrum.pdf'), '-pdf');
 
-amp_spec_fig = figure; amp_spec_fig.Position = [500, 200, 1000, 600]; 
+amp_spec_fig = figure;
+amp_spec_fig.Position = [500, 200, 1000, 600];
 plotting.amp_spectrum;
-amp_spec_fig.Units = 'pixels';
 plot2svg(fullfile(pwd, 'results', 'current-results-amp-spectrum.svg'), amp_spec_fig);
+% mlf2pdf(amp_spec_fig, fullfile(pwd, 'results', 'current-results-amp-spectrum.pdf'), 'helvetica');
+% export_fig(fullfile(pwd, 'results', 'current-results-amp-spectrum.pdf'), '-pdf');
+% print(amp_spec_fig, '-dpdf', fullfile(pwd, 'results', 'current-results-amp-spectrum.pdf'));
+% saveas(amp_spec_fig, fullfile(pwd, 'results', 'current-results-amp-spectrum2.pdf'));
 
 % NOTE: plot2svg is broken at the moment, so you need to change lines 2421
 % and 2446 in plot2svg both to "if true" for it to work...

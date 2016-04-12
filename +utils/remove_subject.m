@@ -15,4 +15,3 @@ for hemisphere = 1:2
         scalp_harmonics{iSubject, stimulus} = NaN(64, 1);
     end
 end
-continue
