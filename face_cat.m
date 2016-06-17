@@ -2,7 +2,7 @@ clearvars
 
 tstamp = clock;
 tstamp = ['-', num2str(tstamp(3)), '-', num2str(tstamp(4)), '-'];
-savefile = fullfile(pwd, 'Results', [date, tstamp, 'data.mat']);
+savefile = fullfile(pwd, 'run-environments', [date, tstamp, 'data.mat']);
 
 scripts = savescripts;
 % This is a function available on my github. It saves the content of all
@@ -54,9 +54,6 @@ breakdur = 5;
 % Stimulus Size
 % stimsize = 12;
 stimsize = 200; % this is in pixels (actual image size)
-
-% Spatial Frequency
-cycperdeg = 2;
 
 % Repitions per Condition
 nrep = 16;

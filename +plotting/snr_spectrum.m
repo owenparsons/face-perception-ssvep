@@ -30,6 +30,7 @@ for hemisphere = 1:2
     fill( x_fill, y_fill, [166 199 255]/255, 'EdgeColor', 'none' );
     
     plot(x, y, 'LineWidth', 1, 'Color', [83 148 255]/255);
+    gridxy([], 1, 'LineStyle', '--');
 end
 
 suptitle('Signal-to-Noise Ratio Spectrum');
