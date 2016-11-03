@@ -60,6 +60,7 @@ try
 catch err
     % No trials in the file (too short?)
     utils.remove_subject;
+    disp('REMOVED BECAUSE NO TRIALS WERE FOUND');
     continue;
 end
 
@@ -161,6 +162,7 @@ repair_electrodes = fft_data.label(bad_electrodes);
 %if numel(repair_electrodes) > 3
 if numel(repair_electrodes) > 3
 utils.remove_subject;
+disp('REMOVED BECAUSE OF >3 NOISY ELECTRODES');
     continue;
 elseif numel(repair_electrodes) > 0
     % If there are bad channels, use ft_channelrepair for interpolation
@@ -257,6 +259,7 @@ end
 % (Make everything NaNs)
 if max(occip_snr{iSubject}(stimulus_freqs==2)) < 2;
     utils.remove_subject;
+    disp('REMOVED BECAUSE SNR IS <2');
     continue;
 end
 
