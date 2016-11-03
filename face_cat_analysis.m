@@ -18,11 +18,11 @@ trialtype = 1; % 1 for periodic, 2 for random faces
 triallabels = {'periodic', 'nonperiodic'};
 
 % provide directory of the data files here
-file_dir = 'C:\Users\k1513504\Documents\face-cat-data';
+file_dir = 'C:\Users\Owen\Documents\MATLAB\face_cat_data';
 file_names = dir([file_dir, '\*.bdf']);
 
 % Load qualtrics data
-qualtrics = load(fullfile(pwd, 'results', 'non-anonymised', 'survey_data.mat'));
+qualtrics = load(fullfile(pwd, 'survey_data.mat'));
 
 for iSubject = 1:numel(file_names);
 %% Set some baseline variables
@@ -157,9 +157,10 @@ for electrode = electrodes
 end
 
 repair_electrodes = fft_data.label(bad_electrodes);
-
+%repair_electrodes = [];
+%if numel(repair_electrodes) > 3
 if numel(repair_electrodes) > 3
-    utils.remove_subject;
+utils.remove_subject;
     continue;
 elseif numel(repair_electrodes) > 0
     % If there are bad channels, use ft_channelrepair for interpolation
